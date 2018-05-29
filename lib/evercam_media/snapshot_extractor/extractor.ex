@@ -34,8 +34,8 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
 
   defp _start_extractor(_state, config) do
     spawn fn ->
-      start_date = config.start_date
-      end_date = config.end_date
+      start_date = config.start_date |> shift_zone(config.timezone)
+      end_date = config.end_date |> shift_zone(config.timezone)
       url = nvr_url(config.host, config.port, config.username, config.password, config.channel)
       images_directory = "#{@root_dir}/#{config.exid}/extract/#{config.id}/"
       upload_path =
@@ -159,5 +159,11 @@ defmodule EvercamMedia.SnapshotExtractor.Extractor do
 
   defp clean_images(images_directory) do
     File.rm_rf!(images_directory)
+  end
+
+  defp shift_zone(date, timezone) do
+    %{year: year, month: month, day: day, hour: hour, minute: minute, second: second} = date
+    Calendar.DateTime.from_erl!({{year, month, day}, {hour, minute, second}}, "UTC")
+    |> Calendar.DateTime.shift_zone!(timezone)
   end
 end
